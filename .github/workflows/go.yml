@@ -3,6 +3,7 @@
 
 name: Go
 
+# Trigger
 on:
   push:
     branches: [ "main" ]
@@ -11,15 +12,47 @@ on:
 
 jobs:
 
-  build:
-    runs-on: ubuntu-latest
+  test:
+    # Basic job setup and followed by steps
+    name: Test
+    runs-on: ubuntu-latest # Set the runner
+
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres:12-alpine
+        # Provide the password for postgres
+        env:
+          POSTGRES_USER: root 
+          POSTGRES_PASSWORD: 2423
+          POSTGRES_DB: simple_bank
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
+    
+    - name: Set up Go # Step1
+      uses: actions/setup-go@v4 # Action1
       with:
         go-version: '1.20'
+
+    - name: Install golang migrate package
+      run: | # | to inditate multiline command
+        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.1/migrate.linux-amd64.tar.gz | tar xvz
+        sudo mv migrate.linux-amd64 /usr/bin/migrate
+        which migrate
+    
+    - name: Migrate up the database
+      run: make migrateup
 
     - name: Build
       run: go build -v ./...
