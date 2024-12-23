@@ -19,14 +19,12 @@ func TestTransferTxDeadlock(t *testing.T) {
 	var n int = 10
 	var amount int64 = 10
 	for i := 0; i < n; i++ {
-		// var threadInfo string = fmt.Sprintf("thread %d", i)
 		fromAccount := account1
 		toAccount := account2
 		if i%2 == 1 {
 			fromAccount, toAccount = toAccount, fromAccount
 		}
 		go func() {
-			// ctx := context.WithValue(context.Background(), struct {} {}, threadInfo)
 			_, err := testStore.TransferTx(context.Background(), TransferArg{FromAccountID: fromAccount.ID, ToAccountID: toAccount.ID, Amount: amount})
 			errors <- err
 		}()
@@ -60,9 +58,7 @@ func TestTransferTx(t *testing.T) {
 	var n int = 5
 	var amount int64 = 10
 	for i := 0; i < n; i++ {
-		// var threadInfo string = fmt.Sprintf("thread %d", i)
 		go func() {
-			// ctx := context.WithValue(context.Background(), struct {} {}, threadInfo)
 			result, err := testStore.TransferTx(context.Background(), TransferArg{FromAccountID: account1.ID, ToAccountID: account2.ID, Amount: amount})
 			errors <- err
 			results <- result

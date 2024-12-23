@@ -58,9 +58,7 @@ func (store *Store) TransferTx(ctx context.Context, args TransferArg) (TransferR
 	var result TransferResult
 	err := store.execTx(ctx, func(q *Queries) error {
 		var txError error
-		// threadInfo := ctx.Value(struct{}{})
 		// create transfer
-		// fmt.Println(threadInfo, " create transfer")
 		result.Transfer, txError = q.CreateTransfer(ctx, CreateTransferParams{FromAccountID: args.FromAccountID, ToAccountID: args.ToAccountID, Amount: args.Amount})
 
 		if txError != nil {
@@ -68,7 +66,6 @@ func (store *Store) TransferTx(ctx context.Context, args TransferArg) (TransferR
 		}
 
 		// create entry 1
-		// fmt.Println(threadInfo, " create entry for fromAccount")
 		result.FromEntry, txError = q.CreateEntry(ctx, CreateEntryParams{AccountID: args.FromAccountID, Amount: -args.Amount})
 
 		if txError != nil {
@@ -76,34 +73,15 @@ func (store *Store) TransferTx(ctx context.Context, args TransferArg) (TransferR
 		}
 
 		// create entry 2
-		// fmt.Println(threadInfo, " create entry for toAccount")
 		result.ToEntry, txError = q.CreateEntry(ctx, CreateEntryParams{AccountID: args.ToAccountID, Amount: args.Amount})
 		if txError != nil {
 			return txError
 		}
 
-		// update balance of account 1
-		// fmt.Println(threadInfo, " update balance for fromAccount")
-		// var fromAccount Account
-		// fromAccount, txError = q.GetAccountForUpdate(ctx, args.FromAccountID)
-
-		// if txError != nil {
-		// 	return txError
-		// }
+		// update balance of account 1 and account 2
 
 		// order matters, smaller id should always be first
 		if args.FromAccountID < args.ToAccountID {
-			// result.FromAccount, txError = q.AddAccountBalance(ctx, AddAccountBalanceParams{ID: args.FromAccountID, Amount: -args.Amount})
-
-			// if txError != nil {
-			// 	return txError
-			// }
-
-			// result.ToAccount, txError = q.AddAccountBalance(ctx, AddAccountBalanceParams{ID: args.ToAccountID, Amount: args.Amount})
-
-			// if txError != nil {
-			// 	return txError
-			// }
 			// code clean up with add money
 			result.FromAccount, result.ToAccount, txError = addMoney(ctx, q, args.FromAccountID, -args.Amount, args.ToAccountID, args.Amount)
 			if txError != nil {
@@ -114,27 +92,7 @@ func (store *Store) TransferTx(ctx context.Context, args TransferArg) (TransferR
 			if txError != nil {
 				return txError
 			}
-			// result.ToAccount, txError = q.AddAccountBalance(ctx, AddAccountBalanceParams{ID: args.ToAccountID, Amount: args.Amount})
-
-			// if txError != nil {
-			// 	return txError
-			// }
-
-			// result.FromAccount, txError = q.AddAccountBalance(ctx, AddAccountBalanceParams{ID: args.FromAccountID, Amount: -args.Amount})
-
-			// if txError != nil {
-			// 	return txError
-			// }
 		}
-
-		// update balance of account 2
-		// fmt.Println(threadInfo, " update balance for toAccount")
-		// var toAccount Account
-		// toAccount, txError = q.GetAccountForUpdate(ctx, args.ToAccountID)
-
-		// if txError != nil {
-		// 	return txError
-		// }
 
 		return nil
 	})
